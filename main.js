@@ -4,8 +4,8 @@ const width = 80;
 const baseDepth = 30;
 const topDepth = 20;
 const height = 30;
-const thickness = 2;
-
+const thickness = 1;
+const halfthickness = thickness / 2;
 
 init();
 animate();
@@ -48,6 +48,16 @@ function init(){
     const axes = new THREE.AxesHelper(100);
     scene.add(axes);
 
+    /**Configuración de los controles de órbita */
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.minDistance = 50;
+    controls.maxDistance = 300;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = true;
+    controls.update();
+
+
     /**Creación base y parte superior */
     const baseGeometry = new THREE.BoxGeometry(width, baseDepth, thickness);
     const baseMaterial = new THREE.MeshStandardMaterial({color: 0x808080});
@@ -58,7 +68,8 @@ function init(){
     const topGeometry = new THREE.BoxGeometry(width, topDepth, thickness);
     const topMaterial = new THREE.MeshStandardMaterial({color: 0x404040});
     const top = new THREE.Mesh(topGeometry, topMaterial);
-    top.position.set(0, 0, height);
+    const offsetY= (baseDepth - topDepth)/2;
+    top.position.set(0, offsetY, height);
     scene.add(top);
 
     /**Cálculo de las coordenadas de las esquinas */
@@ -75,38 +86,52 @@ function init(){
     const p2= new THREE.Vector3(40,-15,0);
     const p3= new THREE.Vector3(-40,-15,0);
 
-    drawPoint(p, 0x0000ff);
-    drawPoint(p1, 0xff0000);
-    drawPoint(p2, 0x00ff00);
-    drawPoint(p3, 0xffff00);
+    //drawPoint(p, 0x0000ff);
+    //drawPoint(p1, 0xff0000);
+    //drawPoint(p2, 0x00ff00);
+    //drawPoint(p3, 0xffff00);
 
-    const p4 = new THREE.Vector3(40,10,30);
-    const p5= new THREE.Vector3(-40,10,30);
-    const p6= new THREE.Vector3(40,-10,30);
-    const p7= new THREE.Vector3(-40,-10,30);
+    const p4 = new THREE.Vector3(39,15,30);
+    const p5= new THREE.Vector3(-40,15,30);
+    const p6= new THREE.Vector3(40,-5,30);
+    const p7= new THREE.Vector3(-40,-5,30);
 
-    drawPoint(p4, 0x0000ff);
-    drawPoint(p5, 0xff0000);
-    drawPoint(p6, 0x00ff00);
-    drawPoint(p7, 0xffff00);
+    //drawPoint(p4, 0x0000ff);
+    //drawPoint(p5, 0xff0000);
+    //drawPoint(p6, 0x00ff00);
+    //drawPoint(p7, 0xffff00);
+
 
     /* Esquinas de la base y la parte superior */
     const baseCorners = [
-    new THREE.Vector3( halfWidth,  halfBaseDepth, 0),
-    new THREE.Vector3(-halfWidth,  halfBaseDepth, 0),
-    new THREE.Vector3( halfWidth, -halfBaseDepth, 0),
-    new THREE.Vector3(-halfWidth, -halfBaseDepth, 0),
+    new THREE.Vector3( halfWidth - halfthickness,  halfBaseDepth - halfthickness, 0),
+    new THREE.Vector3(-halfWidth + halfthickness,  halfBaseDepth - halfthickness, 0),
+    new THREE.Vector3( halfWidth - halfthickness, -halfBaseDepth + halfthickness, 0),
+    new THREE.Vector3(-halfWidth + halfthickness, -halfBaseDepth + halfthickness, 0),
     ];
     console.log("baseCorners:", baseCorners);
 
     const topCorners = [
-    new THREE.Vector3( halfWidth,  halfTopDepth, height),
-    new THREE.Vector3(-halfWidth,  halfTopDepth, height),
-    new THREE.Vector3( halfWidth, -halfTopDepth, height),
-    new THREE.Vector3(-halfWidth, -halfTopDepth, height),
+    new THREE.Vector3( halfWidth - halfthickness,  offsetY + halfTopDepth - halfthickness, height),
+    new THREE.Vector3(-halfWidth + halfthickness,  offsetY + halfTopDepth - halfthickness, height),
+    new THREE.Vector3( halfWidth - halfthickness,  offsetY - halfTopDepth + halfthickness, height),
+    new THREE.Vector3(-halfWidth + halfthickness,  offsetY - halfTopDepth + halfthickness, height),
     ];
-    console.log("topCorners:", topCorners);
-    
+    console.log("topCorners:", topCorners);    
+
+    const lateralMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 });
+
+    /**Creación de los laterales */
+    for (let i = 0; i < 4; i++) {
+    const lateral = createLateral(
+        baseCorners[i],
+        topCorners[i],
+        lateralMaterial
+    );
+    console.log("lateral", i, ":", lateral);
+    scene.add(lateral);
+    }
+
     /**Evento de redimensionamiento de la ventana */
     window.addEventListener('resize', onResize);
 }
@@ -119,6 +144,27 @@ function drawPoint(position, color = 0xff0000, size = 2) {
     sphere.position.copy(position);
     scene.add(sphere);
     return sphere;
+}
+
+/** Función para crear los laterales */
+function createLateral(from, to, material) {
+    const length = from.distanceTo(to);
+
+    const geometry = new THREE.BoxGeometry(thickness, thickness, length);
+    const mesh = new THREE.Mesh(geometry, material);
+
+    /**Colocar en el punto medio */
+    const midPoint = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
+    console.log("midPoint:", midPoint);
+    mesh.position.copy(midPoint);
+
+    /**Alinear con la dirección */
+    mesh.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 0, 1), /**Vector inicial (eje Z)*/
+        new THREE.Vector3().subVectors(to, from).normalize() /**Vector dirección*/
+    );
+
+    return mesh;
 }
 
 /** Función de animación */
