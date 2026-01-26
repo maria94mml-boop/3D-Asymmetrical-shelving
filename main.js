@@ -22,8 +22,7 @@ function init(){
 
     /**Configuración de la cámara alineada con el eje Y, mirando al origen */
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(0, -220, 60);
-    camera.lookAt(0, 0, height / 2);
+    camera.position.set(0, -146, 12);
 
     /**Configuración del renderer */
     renderer = new THREE.WebGLRenderer({
@@ -59,14 +58,52 @@ function init(){
 
     /**Configuración del input para la altura del estante */
     const heightInput = document.getElementById("heightInput");
+    
+    handleShelfChange(shelfGroup);
 
     heightInput.addEventListener("input", () => {
         const newHeight = Number(heightInput.value);
+        frameShelf(shelfGroup);
         buildAsymmetricShelf(newHeight);
     });
 
     /**Evento de redimensionamiento de la ventana */
     window.addEventListener('resize', onResize);
+}
+
+/** Función para manejar los cambios en la estantería */
+function handleShelfChange(shelfGroup) {
+    frameShelf(shelfGroup);
+}
+
+/** Función para enmarcar el estante en la vista de la cámara */
+function frameShelf(shelfGroup) {
+    if (!shelfGroup) return;
+
+    const box = new THREE.Box3().setFromObject(shelfGroup);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+
+    box.getSize(size);
+    box.getCenter(center);
+
+    const height = size.z;
+
+    const distance = height * 2.2 + 80
+
+    camera.position.set(
+        center.x, /**centrado en el x */
+        center.y - distance, /**alejado en el y */
+        center.z + height *0.4 /**elevado en el z */
+    );
+
+    camera.lookAt(center);
+
+    controls.target.copy(center);
+    controls.minDistance = distance * 0.6;
+    controls.maxDistance = distance * 2.5;
+
+    controls.update();
 }
 
 /** Función para dibujar puntos */
