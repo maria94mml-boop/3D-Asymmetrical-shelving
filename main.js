@@ -61,8 +61,64 @@ function init(){
     top.position.set(0, 0, height);
     scene.add(top);
 
+    /**Cálculo de las coordenadas de las esquinas */
+    const halfWidth = width / 2;
+    console.log("halfWidth:", halfWidth);
+    const halfBaseDepth = baseDepth / 2;
+    console.log("halfBaseDepth:", halfBaseDepth);
+    const halfTopDepth = topDepth / 2;
+    console.log("halfTopDepth:", halfTopDepth);
+
+    /**Comprobación de puntos */
+    const p = new THREE.Vector3(40,15,0);
+    const p1= new THREE.Vector3(-40,15,0);
+    const p2= new THREE.Vector3(40,-15,0);
+    const p3= new THREE.Vector3(-40,-15,0);
+
+    drawPoint(p, 0x0000ff);
+    drawPoint(p1, 0xff0000);
+    drawPoint(p2, 0x00ff00);
+    drawPoint(p3, 0xffff00);
+
+    const p4 = new THREE.Vector3(40,10,30);
+    const p5= new THREE.Vector3(-40,10,30);
+    const p6= new THREE.Vector3(40,-10,30);
+    const p7= new THREE.Vector3(-40,-10,30);
+
+    drawPoint(p4, 0x0000ff);
+    drawPoint(p5, 0xff0000);
+    drawPoint(p6, 0x00ff00);
+    drawPoint(p7, 0xffff00);
+
+    /* Esquinas de la base y la parte superior */
+    const baseCorners = [
+    new THREE.Vector3( halfWidth,  halfBaseDepth, 0),
+    new THREE.Vector3(-halfWidth,  halfBaseDepth, 0),
+    new THREE.Vector3( halfWidth, -halfBaseDepth, 0),
+    new THREE.Vector3(-halfWidth, -halfBaseDepth, 0),
+    ];
+    console.log("baseCorners:", baseCorners);
+
+    const topCorners = [
+    new THREE.Vector3( halfWidth,  halfTopDepth, height),
+    new THREE.Vector3(-halfWidth,  halfTopDepth, height),
+    new THREE.Vector3( halfWidth, -halfTopDepth, height),
+    new THREE.Vector3(-halfWidth, -halfTopDepth, height),
+    ];
+    console.log("topCorners:", topCorners);
+    
     /**Evento de redimensionamiento de la ventana */
     window.addEventListener('resize', onResize);
+}
+
+/** Función para dibujar puntos */
+function drawPoint(position, color = 0xff0000, size = 2) {
+    const geometry = new THREE.SphereGeometry(size, 16, 16);
+    const material = new THREE.MeshBasicMaterial({ color });
+    const sphere = new THREE.Mesh(geometry, material);
+    sphere.position.copy(position);
+    scene.add(sphere);
+    return sphere;
 }
 
 /** Función de animación */
