@@ -41,9 +41,7 @@ function init(){
     dir.castShadow = true;
     scene.add(dir);
 
-    /**Utilización de helpers (grid y axes) */
-    //const grid = new THREE.GridHelper(200, 10);
-    //scene.add(grid);
+    /**Utilización de helpers (axes) */
     const axes = new THREE.AxesHelper(100);
     scene.add(axes);
 
@@ -59,21 +57,24 @@ function init(){
     /**Configuración del input para la altura del estante */
     const heightInput = document.getElementById("heightInput");
     
-    handleShelfChange(shelfGroup);
-
+    /**Evento de cambio en el input de altura */
     heightInput.addEventListener("input", () => {
         const newHeight = Number(heightInput.value);
-        frameShelf(shelfGroup);
         buildAsymmetricShelf(newHeight);
+        frameShelf(shelfGroup);
+        logShelfConfig(newHeight);
+        
     });
 
     /**Evento de redimensionamiento de la ventana */
     window.addEventListener('resize', onResize);
 }
 
-/** Función para manejar los cambios en la estantería */
-function handleShelfChange(shelfGroup) {
-    frameShelf(shelfGroup);
+/** Función para registrar la configuración del estante */
+function logShelfConfig(height) {
+    const config = getAsymmetricShelfConfig(height);
+    console.log("Current shelf configuration:");
+    console.log(JSON.stringify(config, null, 2));
 }
 
 /** Función para enmarcar el estante en la vista de la cámara */
@@ -140,7 +141,6 @@ function createLateral(from, to, material) {
 
     /**Colocar en el punto medio */
     const midPoint = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
-    console.log("midPoint:", midPoint);
     mesh.position.copy(midPoint);
 
     /**Alinear con la dirección */
@@ -183,9 +183,30 @@ function createShelfGeometry(shelfGroup, height) {
         topCorners[i],
         lateralMaterial
     );
-    console.log("lateral", i, ":", lateral);
     shelfGroup.add(lateral);
     }
+}
+
+/** Función para obtener la configuración del estante asimétrico */
+function getAsymmetricShelfConfig(height) {
+    return {
+        productId: "ASYM-SHELF-001",
+        type: "asymmetric_shelf",
+        exportedAt: new Date().toISOString(),
+
+        dimensions: {
+            width: width,                 /* cm (X)*/
+            baseDepth: baseDepth,         /* cm (Y base) */
+            topDepth: topDepth,           /* cm (Y top) */
+            height: height,               /* cm (Z) */
+            thickness: thickness          /* cm */
+        },
+        coordinateSystem: {
+            x: "horizontal (left to right)",
+            y: "depth (scene back to viewer)",
+            z: "vertical (bottom to top)"
+        }
+    };
 }
 
 /** Función para construir el estante asimétrico */
@@ -198,6 +219,9 @@ function buildAsymmetricShelf(height) {
     scene.add(shelfGroup);
 
     createShelfGeometry(shelfGroup, height);
+
+    frameShelf(shelfGroup);
+    logShelfConfig(height);
 }
 
 /** Función de animación */
