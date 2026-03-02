@@ -22,8 +22,8 @@ function init(){
 
     /**Configuración de la cámara alineada con el eje Y, mirando al origen */
     camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
-    camera.position.set(0, -146, 12);
-
+    camera.position.set(0, -150, 80);
+    camera.up.set(0, 0, 1);
     /**Configuración del renderer */
     renderer = new THREE.WebGLRenderer({
         canvas: document.getElementById("canvas"),
@@ -52,6 +52,7 @@ function init(){
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.enableZoom = true;
+    controls.target.set(0, 0, 30); 
     controls.update();
 
     /**Configuración del input para la altura del estante */
@@ -227,6 +228,7 @@ function buildAsymmetricShelf(height) {
 /** Función de animación */
 function animate(){
     requestAnimationFrame(animate);
+    controls.update();
     renderer.render(scene, camera); 
 }
 
